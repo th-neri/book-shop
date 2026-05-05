@@ -55,10 +55,12 @@ def get_books(connection):
     with connection:
         return connection.execute("SELECT * FROM books").fetchall()
     
-def delete_book(connection, book_id):
+def delete_book(connection, book):
     with connection:
-        return connection.execute("DELETE FROM books WHERE id=?", (book_id,))
+        return connection.execute("DELETE FROM books WHERE id=?", (book,))
+    
 
+#---------USER FUNCTIONS---------
 def hash_password(password):
     return bcrypt.hashpw(password.encode(), bcrypt.gensalt())
 
@@ -68,17 +70,29 @@ def add_user(connection, name, email, password):
         with connection:
             connection.execute("""
                               INSERT INTO users (name, email, password) VALUES (?, ?, ?);
-                              """, (name, email, password))
+                              """, (name, email, hashed))
             return "success"
     except sqlite3.IntegrityError:
         return "email_exists"
+    
+def find_user_by_id(connection, id):
+    with connection:
+        return connection.execute("SELECT id, name, password FROM users WHERE id=?", (id,)).fetchone()
         
 def login_user(connection, email, password):
     user = connection.execute(
-        "SELECT id, password FROM users WHERE email=?", (email,)
+    "SELECT id, name, password FROM users WHERE email=?", (email,)
     ).fetchone()
 
-    if user and bcrypt.checkpw(password.encode(), user[1]):
-        return user[0]
+    if user and bcrypt.checkpw(password.encode(), user[2]):
+        return user
     return None
+
+def get_user_password(connection, id):
+    with connection:
+        return connection.execute("SELECT password from users WHERE id=?", (id,)).fetchone()
+
+def delete_user_by_id(connection, id):
+    with connection:
+        connection.execute("DELETE FROM users WHERE id=?", (id,))
 
