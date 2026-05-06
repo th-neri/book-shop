@@ -23,7 +23,7 @@ def menu():
                 password  = input("Write your password: ")
 
                 if not name or not email or not password:
-                    print("You need to fill in all the fields.")
+                    print("\nYou need to fill in all the fields.\n")
                     continue
 
                 result = database.add_user(connection, name, email, password)
@@ -43,7 +43,7 @@ def menu():
                     current_user = user[0]
                     name = user[1]
                     is_admin = user[3] == "admin"
-                    print(f'\n---You have been logged in successfully, {name}!---\n')
+                    print(f'\n---You have been logged in, {name}!---\n')
                 else:
                     print("\n---Wrong email or password. Try again or create your own account.---")
             elif choice == "3":
@@ -72,11 +72,29 @@ def menu():
                 else:
                     print("\n---Books available---")
                     for book in books:
-                        print(f'ID Number: {book[0]} | Name of the book: {book[1]} | Price: {book[3]} | Author: {book[2]} | Quantity: {book[4]}')
+                        print(f'ID NUMBER: {book[0]} | NAME OF THE BOOK: {book[1]} | PRICE: {book[3]} | AUTHOR: {book[2]} | QUANTITY: {book[4]}\n')
             elif choice == "2":
                 if not is_admin:
-                    print("Error :/")
+                    print("\nError :/\n")
                     continue
+                
+                print("\n---Write the book informations you want to add----")
+                name = input("Name of the book: ")
+                author = input("Name of the author: ")
+
+                try:
+                    price = float(input("Price of the book: "))
+                    quantity = int(input("Quantity: "))
+                except ValueError:
+                    print("\nInvalid price or quantity.\n")
+                    continue
+
+                if not name or not author:
+                    print("\nYou need to fill in all the fields.\n")
+                    continue
+
+                database.add_book(connection, name, author, price, quantity)
+                print(f'\n---{name} added successfully!---\n')
             elif choice == "3":
                 pass
             elif choice == "4":
