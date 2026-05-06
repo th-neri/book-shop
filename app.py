@@ -17,17 +17,21 @@ def menu():
             choice = input("Enter your choice number: ").strip()
 
             if choice == "1":
-                print("\n---Create your own account now.---\n")
+                print("\n---Create your own account now.---")
                 name = input("Write your name: ")
                 email = input("Write your email: ")
                 password  = input("Write your password: ")
+
+                if not name or not email or not password:
+                    print("You need to fill in all the fields.")
+                    continue
 
                 result = database.add_user(connection, name, email, password)
 
                 if result == "success":
                     print(f'\n---Your account has been successfully created. Welcome to our app, {name}!---')
                 elif result == "email_exists":
-                    print("\n---This email is already registered. Try to sign in or use a different email to create your account.---")
+                    print("\n---This email is already registered. Try to sign in or use a different email to create your own account.---")
             elif choice == "2":
                 print("\n---Sign in---")
                 email = input("Enter your email: ")
@@ -38,6 +42,7 @@ def menu():
                 if user:
                     current_user = user[0]
                     name = user[1]
+                    is_admin = user[3] == "admin"
                     print(f'\n---You have been logged in successfully, {name}!---\n')
                 else:
                     print("\n---Wrong email or password. Try again or create your own account.---")
@@ -48,9 +53,10 @@ def menu():
                 print("Invalid choice. Pick a valid number.")
 
         else:
-            print("===Welcome to our shop! pick any option you want.===")
+            print("===Welcome to our shop! Pick any option you want.===")
             print("1. View the books")
-            print("2. Add a book")
+            if is_admin:
+                print("2. Add a book")
             print("3. Buy a book")
             print("4. Delete your account")
             print("5. Log out")
@@ -58,9 +64,19 @@ def menu():
             choice = input("Enter your choice number: ").strip()
 
             if choice == "1":
-                pass
+                books = database.get_books(connection)
+
+                if not books:
+                    print("\n---No books available.---\n")
+
+                else:
+                    print("\n---Books available---")
+                    for book in books:
+                        print(f'ID Number: {book[0]} | Name of the book: {book[1]} | Price: {book[3]} | Author: {book[2]} | Quantity: {book[4]}')
             elif choice == "2":
-                pass
+                if not is_admin:
+                    print("Error :/")
+                    continue
             elif choice == "3":
                 pass
             elif choice == "4":
@@ -80,12 +96,12 @@ def menu():
                 else:
                     print("\n---User not found.---")
             elif choice == "5":
-                print("\nThanks for coming to our shop and Have a good day!")
+                print("\nThanks for visiting our shop and have a good day!")
                 current_user = None
                 continue
             else:
                 print("Invalid choice. Pick a valid number.")
-                
-
+                  
+    connection.close()
 
 menu()

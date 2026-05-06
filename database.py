@@ -21,7 +21,8 @@ def create_tables(connection):
                            id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                            name TEXT NOT NULL,
                            email TEXT UNIQUE NOT NULL,
-                           password TEXT NOT NULL
+                           password BLOB NOT NULL,
+                           role TEXT DEFAULT user
                            )
                            """)
         
@@ -81,12 +82,16 @@ def find_user_by_id(connection, id):
         
 def login_user(connection, email, password):
     user = connection.execute(
-    "SELECT id, name, password FROM users WHERE email=?", (email,)
+        "SELECT id, name, password, role FROM users WHERE email=?", (email,)
     ).fetchone()
 
     if user and bcrypt.checkpw(password.encode(), user[2]):
         return user
     return None
+
+def make_admin(connection, email):
+    with connection:
+        connection.execute("UPDATE users SET role='admin' WHERE email=?", (email,))
 
 def get_user_password(connection, id):
     with connection:
@@ -95,4 +100,3 @@ def get_user_password(connection, id):
 def delete_user_by_id(connection, id):
     with connection:
         connection.execute("DELETE FROM users WHERE id=?", (id,))
-
