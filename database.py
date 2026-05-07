@@ -22,7 +22,7 @@ def create_tables(connection):
                            name TEXT NOT NULL,
                            email TEXT UNIQUE NOT NULL,
                            password BLOB NOT NULL,
-                           role TEXT DEFAULT user
+                           role TEXT DEFAULT 'user'
                            )
                            """)
         
@@ -51,6 +51,27 @@ def add_book(connection, name, author, price, quantity):
         connection.execute("""
                           INSERT INTO books (name, author, price, quantity) VALUES (?, ?, ?, ?);
                            """, (name, author, price, quantity))
+        
+def buy_book(connection, user_id, book_id, quantity):
+    with connection:
+        book = connection.execute("SELECT quantity, price, name FROM books WHERE id=?", (book_id,)
+        ).fetchone()
+
+        if not book:
+            return "book_not_found"
+
+        stock, price, name = book
+
+        if quantity > stock:
+            return "not_enough"
+
+        total = price * quantity
+
+        connection.execute("UPDATE books SET quantity = quantity - ? WHERE id=?", (quantity, book_id))
+
+        connection.execute("INSERT INTO orders(user_id, total) VALUES (?, ?)", (user_id, total))
+
+        return ("success", name)
 
 def get_books(connection):
     with connection:
@@ -78,11 +99,11 @@ def add_user(connection, name, email, password):
     
 def find_user_by_id(connection, id):
     with connection:
-        return connection.execute("SELECT id, name, password FROM users WHERE id=?", (id,)).fetchone()
+        return connection.execute("SELECT id, name, password FROM users WHERE id=?", (id,)
+        ).fetchone()
         
 def login_user(connection, email, password):
-    user = connection.execute(
-        "SELECT id, name, password, role FROM users WHERE email=?", (email,)
+    user = connection.execute("SELECT id, name, password, role FROM users WHERE email=?", (email,)
     ).fetchone()
 
     if user and bcrypt.checkpw(password.encode(), user[2]):
@@ -95,7 +116,8 @@ def make_admin(connection, email):
 
 def get_user_password(connection, id):
     with connection:
-        return connection.execute("SELECT password from users WHERE id=?", (id,)).fetchone()
+        return connection.execute("SELECT password from users WHERE id=?", (id,)
+        ).fetchone()
 
 def delete_user_by_id(connection, id):
     with connection:

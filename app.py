@@ -53,7 +53,7 @@ def menu():
                 print("Invalid choice. Pick a valid number.")
 
         else:
-            print("===Welcome to our shop! Pick any option you want.===")
+            print("\n===Welcome to our shop! Pick any option you want.===")
             print("1. View the books")
             if is_admin:
                 print("2. Add a book")
@@ -72,7 +72,7 @@ def menu():
                 else:
                     print("\n---Books available---")
                     for book in books:
-                        print(f'ID NUMBER: {book[0]} | NAME OF THE BOOK: {book[1]} | PRICE: {book[3]} | AUTHOR: {book[2]} | QUANTITY: {book[4]}\n')
+                        print(f'ID NUMBER: {book[0]} | NAME OF THE BOOK: {book[1]} | PRICE: {book[3]} | AUTHOR: {book[2]} | STOCK: {book[4]}')
             elif choice == "2":
                 if not is_admin:
                     print("\nError :/\n")
@@ -96,7 +96,32 @@ def menu():
                 database.add_book(connection, name, author, price, quantity)
                 print(f'\n---{name} added successfully!---\n')
             elif choice == "3":
-                pass
+                books = database.get_books(connection)
+
+                if not books:
+                    print("\n---No books available.---\n")
+                    continue
+
+                print("\n---Books available---")
+                for book in books:
+                    print(f'ID NUMBER: {book[0]} | NAME OF THE BOOK: {book[1]} | PRICE: {book[3]} | AUTHOR: {book[2]} | STOCK: {book[4]}')
+
+                try:
+                    book_id = int(input("Pick the ID number of the book you want to buy: "))
+                    quantity = int(input("Pick the quantity: "))
+                except ValueError:
+                    print("\nInvalid input.\n")
+                    continue
+
+                result = database.buy_book(connection, current_user, book_id, quantity)
+
+                if result[0] == "success":
+                    print(f'\n---Purchased successfully. You bought {result[1]}!---')
+                elif result == "book_not_found":
+                    print("\nBook ID not found :(\n")
+                elif result == "not_enough":
+                    print("\nThere is not enough stock.\n")
+
             elif choice == "4":
                 password = input("Enter your password to delete your account: ")
 
@@ -105,14 +130,21 @@ def menu():
                 if result:
                     stored_password = result[0]
 
-                    if bcrypt.checkpw(password.encode(), stored_password):
-                        database.delete_user_by_id(connection, current_user)
-                        current_user = None
-                        print("\n---Account has been deleted successfully!---")
+                    confirm = input("Are you sure you want to delete your account ? (Y/N): ").lower()
+                    if confirm == "n":
+                        print("\nCancelled.")
+                        continue
+                    elif confirm == "y":
+                        if bcrypt.checkpw(password.encode(), stored_password):
+                            database.delete_user_by_id(connection, current_user)
+                            current_user = None
+                            print("\n---Account has been deleted successfully!---")
+                        else:
+                            print("\n---Incorrect password. Try again.---")
                     else:
-                        print("\n---Incorrect password. Try again.---")
+                        print("\nInvalid input. You have to use (Y) for yes or (N) for no.")
                 else:
-                    print("\n---User not found.---")
+                    print("\nUser not found.")
             elif choice == "5":
                 print("\nThanks for visiting our shop and have a good day!")
                 current_user = None
