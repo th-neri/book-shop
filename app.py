@@ -6,6 +6,7 @@ def menu():
     database.create_tables(connection)
 
     current_user = None
+    is_admin = False
 
     while True:
         if current_user is None:
@@ -19,8 +20,8 @@ def menu():
             if choice == "1":
                 print("\n---Create your own account now.---")
                 name = input("Write your name: ")
-                email = input("Write your email: ")
-                password  = input("Write your password: ")
+                email = input("Write your email: ").lower()
+                password  = input("Write your password: ").lower()
 
                 if not name or not email or not password:
                     print("\nYou need to fill in all the fields.\n")
@@ -34,8 +35,8 @@ def menu():
                     print("\n---This email is already registered. Try to sign in or use a different email to create your own account.---")
             elif choice == "2":
                 print("\n---Sign in---")
-                email = input("Enter your email: ")
-                password = input("Enter your password: ")
+                email = input("Enter your email: ").lower()
+                password = input("Enter your password: ").lower()
 
                 user = database.login_user(connection, email, password)
 
@@ -56,10 +57,13 @@ def menu():
             print("\n===Welcome to our shop! Pick any option you want.===")
             print("1. View the books")
             if is_admin:
-                print("2. Add a book")
-            print("3. Buy a book")
-            print("4. Delete your account")
-            print("5. Log out")
+                print("2. Add a book on the shop")
+            print("3. Add book to the cart")
+            print("4. View cart")
+            print("5. Remove from cart")
+            print("6. Checkout")
+            print("7. Delete your account")
+            print("8. Log out")
 
             choice = input("Enter your choice number: ").strip()
 
@@ -72,7 +76,7 @@ def menu():
                 else:
                     print("\n---Books available---")
                     for book in books:
-                        print(f'ID NUMBER: {book[0]} | NAME OF THE BOOK: {book[1]} | PRICE: {book[3]} | AUTHOR: {book[2]} | STOCK: {book[4]}')
+                        print(f'ID NUMBER: {book[0]} | NAME OF THE BOOK: {book[1]} | PRICE: ${book[3]:.2f} | AUTHOR: {book[2]} | STOCK: {book[4]}')
             elif choice == "2":
                 if not is_admin:
                     print("\nError :/\n")
@@ -104,25 +108,67 @@ def menu():
 
                 print("\n---Books available---")
                 for book in books:
-                    print(f'ID NUMBER: {book[0]} | NAME OF THE BOOK: {book[1]} | PRICE: {book[3]} | AUTHOR: {book[2]} | STOCK: {book[4]}')
+                    print(f'ID NUMBER: {book[0]} | NAME OF THE BOOK: {book[1]} | PRICE: ${book[3]:.2f} | AUTHOR: {book[2]} | STOCK: {book[4]}')
 
                 try:
-                    book_id = int(input("Pick the ID number of the book you want to buy: "))
-                    quantity = int(input("Pick the quantity: "))
+                    book_id = int(input("Enter the Book ID number you want: "))
+                    quantity = int(input("Quantity: "))
                 except ValueError:
-                    print("\nInvalid input.\n")
+                    print("\nInvalid number.\n")
                     continue
 
-                result = database.buy_book(connection, current_user, book_id, quantity)
+                result = database.add_to_the_cart(connection, current_user, book_id, quantity)
 
                 if result[0] == "success":
-                    print(f'\n---Purchased successfully. You bought {result[1]}!---')
+                    print(f'\n---Book {result[1]} added to the cart!---')
                 elif result == "book_not_found":
                     print("\nBook ID not found :(\n")
                 elif result == "not_enough":
                     print("\nThere is not enough stock.\n")
-
+                elif result == "invalid_quantity":
+                    print("\nInvalid quantity.\n")
             elif choice == "4":
+                cart = database.get_cart(connection, current_user)
+
+                if not cart:
+                    print("\n---No books added to the cart---\n")
+                    continue
+
+                total = 0
+
+                print("\n---Your cart---")
+                for item in cart:
+                    book_id, name, author, price, quantity = item
+
+                    subtotal = price * quantity
+                    total += subtotal
+                
+                    print(f'ID NUMBER: {book_id} | NAME OF THE BOOK: {name} | PRICE: ${price:.2f} | AUTHOR: {author} | QUANTITY: {quantity} | SUBTOTAL: ${subtotal:.2f}')
+
+                print(f'\nTOTAL: ${total:.2f}')
+            elif choice == "5":
+                books = database.get_books(connection, current_user)
+
+                if not books:
+                    print("\n---No books added to the cart---\n")
+                    continue
+
+                print("\n---Your cart---")
+                for item in cart:
+                    print(f'ID NUMBER: {item[9]} | NAME OF THE BOOK: {item[1]} | QUANTITY: {item[4]}')
+
+                try:
+                    book_id = int(input("Enter the Book ID number you want to remove from your cart: "))
+                except ValueError:
+                    print("\nInvalid number.\n")
+                    continue
+
+                database.delete_from_cart(connection, current_user, book_id)
+
+                print("\n---Book removed from your cart.---\n")
+            elif choice == "6":
+                pass
+            elif choice == "7":
                 password = input("Enter your password to delete your account: ")
 
                 result = database.get_user_password(connection, current_user)
@@ -145,9 +191,10 @@ def menu():
                         print("\nInvalid input. You have to use (Y) for yes or (N) for no.")
                 else:
                     print("\nUser not found.")
-            elif choice == "5":
+            elif choice == "8":
                 print("\nThanks for visiting our shop and have a good day!")
                 current_user = None
+                is_admin= False
                 continue
             else:
                 print("Invalid choice. Pick a valid number.")
