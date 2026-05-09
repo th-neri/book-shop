@@ -127,7 +127,7 @@ def add_to_the_cart(connection, user_id, book_id, quantity):
 
         if existing:
             connection.execute("""
-                              UPDATE cart SET quantity = quantity + WHERE user_id=? AND book_id=?""", 
+                              UPDATE cart SET quantity = quantity + ? WHERE user_id=? AND book_id=?""", 
                               (quantity, user_id, book_id))
         else:
             connection.execute("""
@@ -170,7 +170,7 @@ def checkout_cart(connection, user_id):
         for item in cart_items:
             book_id, name, price, stock, cart_quantity = item
 
-            connection.execute("UPDATE books SET quantity = quantity - WHERE id=?", (cart_quantity, book_id))
+            connection.execute("UPDATE books SET quantity = quantity - ? WHERE id=?", (cart_quantity, book_id))
 
         connection.execute("INSERT INTO orders (user_id, total) VALUES (?, ?)", (user_id, total))
 
