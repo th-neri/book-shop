@@ -46,6 +46,8 @@ def create_tables(connection):
                            )
                            """)
 
+
+#---------BOOK FUNCTIONS---------
 def add_book(connection, name, author, price, quantity):
     with connection:
         connection.execute("""
@@ -57,10 +59,10 @@ def get_books(connection):
         return connection.execute("SELECT * FROM books"
                                   ).fetchall()
     
-def delete_book(connection, book):
+def delete_book(connection, book_id):
     with connection:
-        return connection.execute("DELETE FROM books WHERE id=?", (book,))
-    
+        return connection.execute("DELETE FROM books WHERE id=?", (book_id,))
+
 
 #---------USER FUNCTIONS---------
 def hash_password(password):
@@ -105,7 +107,6 @@ def delete_user_by_id(connection, id):
 
 
 #---------CART FUNCTIONS---------
-
 def add_to_the_cart(connection, user_id, book_id, quantity):
     with connection:
         book = connection.execute("SELECT quantity, name from books where id=?", (book_id,)

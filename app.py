@@ -66,11 +66,13 @@ def menu():
         else:
             print("\n===Options of our shop===")
             print("1. View the books")
+            print("2. Buy your book here")
+            print("3. Delete your account")
+            print("4. Log out")
             if is_admin:
-                print("2. Add a book on the shop")
-            print("3. Buy your book here")
-            print("4. Delete your account")
-            print("5. Log out")
+#ONLY FOR ADMINS
+                print("5. Add a book on the shop")
+                print("6. Remove book from the shop")
 
             choice = input("Enter your choice number: ").strip()
 
@@ -87,32 +89,8 @@ def menu():
                         print(
                             f'ID NUMBER: {book[0]} | NAME OF THE BOOK: {book[1]} | PRICE: ${book[3]:.2f} | AUTHOR: {book[2]} | STOCK: {book[4]}')
                         
-#---OPTION TWO: ADD BOOK(ONLY FOR ADMINS)----
-            elif choice == "2":
-                if not is_admin:
-                    print("\nError :/\n")
-                    continue
-
-                print("\n---Write the book informations you want to add----")
-                name = input("Name of the book: ")
-                author = input("Name of the author: ")
-
-                try:
-                    price = float(input("Price of the book: "))
-                    quantity = int(input("Quantity: "))
-                except ValueError:
-                    print("\nInvalid price or quantity.\n")
-                    continue
-
-                if not name or not author:
-                    print("\nYou need to fill in all the fields.\n")
-                    continue
-
-                database.add_book(connection, name, author, price, quantity)
-                print(f'\n---{name} added successfully!---\n')
-
 #---OPTION THREE: BUY A BOOK(WHICH WILL TAKE THE USER TO ANOTHER PAGE WHERE THERE ARE MORE OPTIONS RELATED TO THE PURCHASE----
-            elif choice == "3":
+            elif choice == "2":
                while True:
                     print("\n===Options===")
                     print("1. Add book to the cart")
@@ -128,7 +106,7 @@ def menu():
                         books = database.get_books(connection)
 
                         if not books:
-                            print("\n---No books available.---\n")
+                            print("\n---No books available.---")
                             continue
 
                         print("\n---Books available---")
@@ -139,7 +117,7 @@ def menu():
                             book_id = int(input("Enter the Book ID number you want: "))
                             quantity = int(input("Quantity: "))
                         except ValueError:
-                            print("\nInvalid number.\n")
+                            print("\nInvalid number.")
                             continue
 
                         result = database.add_to_the_cart(connection, current_user, book_id, quantity)
@@ -147,18 +125,18 @@ def menu():
                         if result[0] == "success":
                             print(f'\n---Book {result[1]} added to the cart!---')
                         elif result == "book_not_found":
-                            print("\nBook ID not found :(\n")
+                            print("\nBook ID not found :(")
                         elif result == "not_enough":
-                            print("\nThere is not enough stock.\n")
+                            print("\nThere is not enough stock.")
                         elif result == "invalid_quantity":
-                            print("\nInvalid quantity.\n")
+                            print("\nInvalid quantity.")
 
 #---OPTION TWO OF THE BUY BOOK OPTION: VIEW CART----
                     elif option == "2":
                         cart = database.get_cart(connection, current_user)
 
                         if not cart:
-                            print("\n---No books added to the cart---\n")
+                            print("\n---No books added to the cart---")
                             continue
 
                         total = 0
@@ -179,7 +157,7 @@ def menu():
                         cart = database.get_cart(connection, current_user)
 
                         if not cart:
-                            print("\n---No books added to the cart---\n")
+                            print("\n---No books added to the cart---")
                             continue
 
                         print("\n---Your cart---")
@@ -189,11 +167,11 @@ def menu():
                         try:
                             book_id = int(input("Enter the Book ID number you want to remove from your cart: "))
                         except ValueError:
-                            print("\nInvalid number.\n")
+                            print("\nInvalid number.")
                             continue
 
                         database.delete_from_cart(connection, current_user, book_id)
-                        print("\n---Book removed from your cart.---\n")
+                        print("\n---Book removed from your cart.---")
 
 #---OPTION FOUR OF THE BUY BOOK OPTION: CHECKOUT----
                     elif option == "4":
@@ -204,7 +182,7 @@ def menu():
                         break
 
 #---OPTION FOUR: DELETE THE USER ACCOUNT----
-            elif choice == "4":
+            elif choice == "3":
                 password = input(
                     "Enter your password to delete your account: ")
 
@@ -220,8 +198,7 @@ def menu():
                         continue
                     elif confirm == "y":
                         if bcrypt.checkpw(password.encode(), stored_password):
-                            database.delete_user_by_id(
-                                connection, current_user)
+                            database.delete_user_by_id(connection, current_user)
                             current_user = None
                             print("\n---Account has been deleted successfully!---")
                         else:
@@ -233,11 +210,50 @@ def menu():
                     print("\nUser not found.")
 
 #---OPTION FIVE: LOGOUT----
-            elif choice == "5":
+            elif choice == "4":
                 print("\nThanks for visiting our shop and have a good day!")
                 current_user = None
                 is_admin = False
                 continue
+
+#---OPTION TWO: ADD BOOK(ONLY FOR ADMINS)----
+            elif choice == "5":
+                if not is_admin:
+                    print("\nError :/")
+                    continue
+
+                print("\n---Write the book informations you want to add----")
+                name = input("Name of the book: ")
+                author = input("Name of the author: ")
+
+                try:
+                    price = float(input("Price of the book: "))
+                    quantity = int(input("Quantity: "))
+                except ValueError:
+                    print("\nInvalid price or quantity.")
+                    continue
+
+                if not name or not author:
+                    print("\nYou need to fill in all the fields.")
+                    continue
+
+                database.add_book(connection, name, author, price, quantity)
+                print(f'\n---{name} added successfully!---')
+
+#---OPTION THREE: REMOVE BOOK FROM THE SHOP(ONLY FOR ADMINS)----
+            elif choice == "6":
+                if not is_admin:
+                    print("\nError :/")
+                    continue
+
+                try:
+                    book_id = int(input("Enter the book ID number you want to remove from the shop: "))
+                except ValueError:
+                    print("\nInvalid number.")
+                    continue
+
+                database.delete_book(connection, book_id)
+                print("\n---Book removed from the shop.---")            
             else:
                 print("Invalid choice. Pick a valid number.")
 
