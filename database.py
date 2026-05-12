@@ -175,6 +175,6 @@ def checkout_cart(connection, user_id):
 
         connection.execute("INSERT INTO orders (user_id, total) VALUES (?, ?)", (user_id, total))
 
-        connection.execute("DELETE from cart WHERE user_id=?", (user_id))
+        connection.execute("DELETE FROM cart WHERE user_id=?", (user_id,))
 
         return("success", total)
